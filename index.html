@@ -8,8 +8,8 @@
     <style>
         :root {
             --card-bg: rgba(10, 10, 10, 0.7);
-            --apple-toast: rgba(255, 255, 255, 0.95);
             --border-white: rgba(255, 255, 255, 0.1);
+            --apple-dark: rgba(25, 25, 25, 0.8);
         }
         * { box-sizing: border-box; outline: none; }
         body {
@@ -24,6 +24,47 @@
             overflow: hidden;
             user-select: none;
         }
+
+        #apple-toast {
+            position: fixed;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.7);
+            background: var(--apple-dark);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.15);
+            z-index: 10000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #apple-toast.show {
+            top: 30px;
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+
+        #apple-toast.moving {
+            filter: blur(3px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #apple-toast i {
+            color: #30d158;
+            font-size: 16px;
+        }
+
         #fragmentsCanvas {
             position: absolute;
             inset: 0;
@@ -38,25 +79,7 @@
         }
         .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s infinite linear; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        #apple-toast {
-            position: fixed;
-            top: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--apple-toast);
-            color: #000;
-            padding: 10px 24px;
-            border-radius: 50px;
-            font-size: 14px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: top 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-            z-index: 10000;
-        }
-        #apple-toast i { color: #34c759; }
+
         .main-card {
             position: relative;
             z-index: 10;
@@ -116,12 +139,16 @@
     </style>
 </head>
 <body>
+
 <canvas id="fragmentsCanvas"></canvas>
+
 <div id="apple-toast">
     <i class="fas fa-check-circle"></i>
-    <span>Copied!</span>
+    <span>Copied to clipboard</span>
 </div>
+
 <div id="loader"><div class="spinner"></div></div>
+
 <div class="main-card" id="card">
     <img src="p/3RBGE.png" class="profile-img">
     <div class="name">3rbge</div>
@@ -135,8 +162,8 @@
             <span>Discord</span>
             <i class="fab fa-discord"></i>
         </div>
-        <div class="btn-link">
-            <span>Portfolio</span>
+        <div class="btn-link" onclick="window.open('https://discord.gg/J4n9EE7gyy', '_blank')">
+            <span>A3d Production</span>
             <i class="fas fa-briefcase"></i>
         </div>
     </div>
@@ -150,7 +177,28 @@
         <audio id="audio" src="p/3RBGE.mp3" loop></audio>
     </div>
 </div>
+
 <script>
+    function copyDiscord() {
+        navigator.clipboard.writeText("rv_q");
+        const toast = document.getElementById('apple-toast');
+        
+        toast.classList.add('moving');
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('moving');
+        }, 400);
+
+        setTimeout(() => {
+            toast.classList.add('moving');
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.classList.remove('moving');
+            }, 700);
+        }, 2000);
+    }
+
     const canvas = document.getElementById('fragmentsCanvas');
     const ctx = canvas.getContext('2d');
     let w, h, frags = [];
@@ -179,9 +227,7 @@
             ctx.rotate(f.rot * Math.PI / 180);
             ctx.fillRect(-f.size/2, -f.size/2, f.size, f.size);
             ctx.restore();
-            f.x += f.speedX;
-            f.y += f.speedY;
-            f.rot += f.rotSpeed;
+            f.x += f.speedX; f.y += f.speedY; f.rot += f.rotSpeed;
             if(f.x < 0) f.x = w; if(f.x > w) f.x = 0;
             if(f.y < 0) f.y = h; if(f.y > h) f.y = 0;
         });
@@ -189,6 +235,7 @@
     }
     window.addEventListener('resize', initFrags);
     initFrags(); drawFrags();
+
     window.onload = () => {
         setTimeout(() => {
             document.getElementById('loader').style.opacity = '0';
@@ -198,12 +245,7 @@
             }, 800);
         }, 1200);
     };
-    function copyDiscord() {
-        navigator.clipboard.writeText("rv_q");
-        const toast = document.getElementById('apple-toast');
-        toast.style.top = '30px';
-        setTimeout(() => { toast.style.top = '-100px'; }, 2500);
-    }
+
     const audio = document.getElementById('audio');
     const pBtn = document.getElementById('play'), paBtn = document.getElementById('pause'), fill = document.getElementById('prog-fill');
     pBtn.onclick = () => { audio.play(); pBtn.style.display='none'; paBtn.style.display='inline-block'; };
@@ -213,13 +255,13 @@
         this.innerHTML = audio.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
     };
     audio.ontimeupdate = () => {
-        fill.style.width = (audio.currentTime / audio.duration) * 100 + '%';
+        if(audio.duration) fill.style.width = (audio.currentTime / audio.duration) * 100 + '%';
     };
     document.getElementById('progWrap').onclick = (e) => {
         audio.currentTime = (e.offsetX / e.currentTarget.clientWidth) * audio.duration;
     };
+
     document.addEventListener('contextmenu', e => e.preventDefault());
 </script>
 </body>
 </html>
-
